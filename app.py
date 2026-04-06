@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -61,14 +61,14 @@ hr { border-color: rgba(255,255,255,0.1) !important; }
 """, unsafe_allow_html=True)
 
 
-# ── API key resolution (secrets → env → sidebar input) ───────────────────────
+# ── API key resolution ────────────────────────────────────────────────────────
 def get_hosted_key():
     try:
-        return st.secrets["GEMINI_API_KEY"]
+        return st.secrets["GROQ_API_KEY"]
     except Exception:
         pass
     import os
-    return os.environ.get("GEMINI_API_KEY", None)
+    return os.environ.get("GROQ_API_KEY", None)
 
 HOSTED_KEY = get_hosted_key()
 
@@ -134,16 +134,10 @@ if "manual_api_key" not in st.session_state:
     st.session_state.manual_api_key = ""
 
 
-def get_model():
+def get_client():
     key = HOSTED_KEY or st.session_state.manual_api_key
     if key:
-        genai.configure(api_key=key)
-        return genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            system_instruction=SYSTEM_PROMPT.format(
-                role=st.session_state.role or "Student"
-            ),
-        )
+        return Groq(api_key=key)
     return None
 
 
@@ -157,15 +151,15 @@ with st.sidebar:
     if not HOSTED_KEY:
         st.markdown("### Setup")
         manual_key = st.text_input(
-            "Gemini API Key",
+            "Groq API Key",
             type="password",
-            placeholder="AIza...",
-            help="Get your free key at aistudio.google.com/apikey",
+            placeholder="gsk_...",
+            help="Get your free key at console.groq.com",
         )
         if manual_key:
             st.session_state.manual_api_key = manual_key
             st.success("API key set ✓")
-        st.caption("🔗 [Get free key →](https://aistudio.google.com/apikey)")
+        st.caption("🔗 [Get free key →](https://console.groq.com)")
         st.divider()
 
     st.markdown("### Select Role")
@@ -211,7 +205,7 @@ else:
     st.markdown(f"## {st.session_state.role} Portal")
     st.markdown('<span class="status-badge">● Live</span>', unsafe_allow_html=True)
 
-    # Quick prompts (only at conversation start)
+    # Quick prompts
     if len(st.session_state.messages) <= 1:
         st.markdown("**Quick questions:**")
         cols = st.columns(2)
@@ -229,9 +223,9 @@ else:
 
     # Chat input
     if user_input := st.chat_input("Ask anything about campus..."):
-        model = get_model()
-        if not model:
-            st.error("⚠️ Please enter your Gemini API key in the sidebar.")
+        client = get_client()
+        if not client:
+            st.error("⚠️ Please enter your Groq API key in the sidebar.")
         else:
             st.session_state.messages.append({"role": "user", "content": user_input})
 
@@ -242,20 +236,28 @@ else:
                 placeholder = st.empty()
                 full_response = ""
 
-                # Build Gemini chat history (excluding the latest user message)
-                history = []
-                for m in st.session_state.messages[1:-1]:  # skip welcome + latest
-                    history.append({
-                        "role": "user" if m["role"] == "user" else "model",
-                        "parts": [m["content"]],
-                    })
+                # Build messages for Groq
+                groq_messages = [
+                    {
+                        "role": "system",
+                        "content": SYSTEM_PROMPT.format(role=st.session_state.role),
+                    }
+                ] + [
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ]
 
-                chat = model.start_chat(history=history)
+                # Stream response
+                stream = client.chat.completions.create(
+                    model="llama3-8b-8192",
+                    messages=groq_messages,
+                    stream=True,
+                    max_tokens=1024,
+                )
 
-                # Stream the response
-                response = chat.send_message(user_input, stream=True)
-                for chunk in response:
-                    full_response += chunk.text
+                for chunk in stream:
+                    delta = chunk.choices[0].delta.content or ""
+                    full_response += delta
                     placeholder.markdown(full_response + "▌")
 
                 placeholder.markdown(full_response)
