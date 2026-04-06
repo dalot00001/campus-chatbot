@@ -1,7 +1,7 @@
 import streamlit as st
-import anthropic
+import google.generativeai as genai
 
-# ── Page config ─────────────────────────────────────────────────────────────
+# ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="CampusAI",
     page_icon="🎓",
@@ -63,14 +63,12 @@ hr { border-color: rgba(255,255,255,0.1) !important; }
 
 # ── API key resolution (secrets → env → sidebar input) ───────────────────────
 def get_hosted_key():
-    """Check Streamlit secrets first, then environment variable."""
     try:
-        return st.secrets["ANTHROPIC_API_KEY"]
+        return st.secrets["GEMINI_API_KEY"]
     except Exception:
         pass
     import os
-    return os.environ.get("ANTHROPIC_API_KEY", None)
-
+    return os.environ.get("GEMINI_API_KEY", None)
 
 HOSTED_KEY = get_hosted_key()
 
@@ -136,10 +134,16 @@ if "manual_api_key" not in st.session_state:
     st.session_state.manual_api_key = ""
 
 
-def get_client():
+def get_model():
     key = HOSTED_KEY or st.session_state.manual_api_key
     if key:
-        return anthropic.Anthropic(api_key=key)
+        genai.configure(api_key=key)
+        return genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=SYSTEM_PROMPT.format(
+                role=st.session_state.role or "Student"
+            ),
+        )
     return None
 
 
@@ -153,14 +157,15 @@ with st.sidebar:
     if not HOSTED_KEY:
         st.markdown("### Setup")
         manual_key = st.text_input(
-            "Anthropic API Key",
+            "Gemini API Key",
             type="password",
-            placeholder="sk-ant-...",
-            help="Get your key at console.anthropic.com",
+            placeholder="AIza...",
+            help="Get your free key at aistudio.google.com/apikey",
         )
         if manual_key:
             st.session_state.manual_api_key = manual_key
             st.success("API key set ✓")
+        st.caption("🔗 [Get free key →](https://aistudio.google.com/apikey)")
         st.divider()
 
     st.markdown("### Select Role")
@@ -206,6 +211,7 @@ else:
     st.markdown(f"## {st.session_state.role} Portal")
     st.markdown('<span class="status-badge">● Live</span>', unsafe_allow_html=True)
 
+    # Quick prompts (only at conversation start)
     if len(st.session_state.messages) <= 1:
         st.markdown("**Quick questions:**")
         cols = st.columns(2)
@@ -216,14 +222,16 @@ else:
                     st.rerun()
         st.divider()
 
+    # Render message history
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"], avatar="🎓" if msg["role"] == "assistant" else "👤"):
             st.markdown(msg["content"])
 
+    # Chat input
     if user_input := st.chat_input("Ask anything about campus..."):
-        client = get_client()
-        if not client:
-            st.error("⚠️ Please enter your Anthropic API key in the sidebar.")
+        model = get_model()
+        if not model:
+            st.error("⚠️ Please enter your Gemini API key in the sidebar.")
         else:
             st.session_state.messages.append({"role": "user", "content": user_input})
 
@@ -234,18 +242,21 @@ else:
                 placeholder = st.empty()
                 full_response = ""
 
-                with client.messages.stream(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=1024,
-                    system=SYSTEM_PROMPT.format(role=st.session_state.role),
-                    messages=[
-                        {"role": m["role"], "content": m["content"]}
-                        for m in st.session_state.messages
-                    ],
-                ) as stream:
-                    for text in stream.text_stream:
-                        full_response += text
-                        placeholder.markdown(full_response + "▌")
+                # Build Gemini chat history (excluding the latest user message)
+                history = []
+                for m in st.session_state.messages[1:-1]:  # skip welcome + latest
+                    history.append({
+                        "role": "user" if m["role"] == "user" else "model",
+                        "parts": [m["content"]],
+                    })
+
+                chat = model.start_chat(history=history)
+
+                # Stream the response
+                response = chat.send_message(user_input, stream=True)
+                for chunk in response:
+                    full_response += chunk.text
+                    placeholder.markdown(full_response + "▌")
 
                 placeholder.markdown(full_response)
                 st.session_state.messages.append(
