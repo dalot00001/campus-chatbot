@@ -11,52 +11,202 @@ st.set_page_config(
 # ── Styling ──────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@300;400;500&display=swap');
 
-html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-h1, h2, h3 { font-family: 'Playfair Display', serif !important; }
-
-.stApp { background: linear-gradient(135deg, #f5f3ef 0%, #e8e4dc 100%); }
-
-[data-testid="stChatMessage"] {
-    background: white;
-    border-radius: 16px;
-    padding: 4px 8px;
-    margin-bottom: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+html, body, [class*="css"] {
+    font-family: 'Outfit', sans-serif;
 }
 
-[data-testid="stSidebar"] { background: #1a1a2e !important; }
-[data-testid="stSidebar"] * { color: #e5e7eb !important; }
+/* ── Deep navy + electric teal background ── */
+.stApp {
+    background: linear-gradient(145deg, #0a0e1a 0%, #0d1b2a 40%, #0a1628 70%, #071020 100%);
+    min-height: 100vh;
+}
+
+/* Animated background dots */
+.stApp::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.07) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.07) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── All text white by default ── */
+.stApp, .stApp p, .stApp li, .stApp span, .stApp label {
+    color: #e2e8f0 !important;
+}
+
+h1, h2, h3 {
+    font-family: 'Syne', sans-serif !important;
+    color: #ffffff !important;
+}
+
+/* ── Sidebar ── */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #060d1a 0%, #0a1628 100%) !important;
+    border-right: 1px solid rgba(0, 212, 255, 0.15) !important;
+}
+[data-testid="stSidebar"] * { color: #cbd5e1 !important; }
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3 { color: white !important; }
+[data-testid="stSidebar"] h3 {
+    color: #ffffff !important;
+    font-family: 'Syne', sans-serif !important;
+}
 
-div[data-testid="column"] > div > div > div > button {
+/* ── Role buttons in sidebar ── */
+div[data-testid="column"] > div > div > div > button,
+[data-testid="stSidebar"] button {
     width: 100%;
-    border-radius: 14px !important;
-    border: 1.5px solid rgba(255,255,255,0.15) !important;
-    background: rgba(255,255,255,0.07) !important;
-    color: white !important;
-    font-size: 15px !important;
-    padding: 14px !important;
-    transition: all 0.2s ease;
+    border-radius: 12px !important;
+    border: 1px solid rgba(0, 212, 255, 0.25) !important;
+    background: rgba(0, 212, 255, 0.06) !important;
+    color: #e2e8f0 !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+    transition: all 0.2s ease !important;
 }
-div[data-testid="column"] > div > div > div > button:hover {
-    background: rgba(255,255,255,0.15) !important;
+div[data-testid="column"] > div > div > div > button:hover,
+[data-testid="stSidebar"] button:hover {
+    background: rgba(0, 212, 255, 0.15) !important;
+    border-color: rgba(0, 212, 255, 0.5) !important;
+    transform: translateY(-1px) !important;
 }
 
-.status-badge {
-    display: inline-block;
-    background: #dcfce7;
-    color: #166534;
+/* ── Chat messages ── */
+[data-testid="stChatMessage"] {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 6px 12px !important;
+    margin-bottom: 8px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+/* ── Chat input ── */
+[data-testid="stChatInput"] {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+    border-radius: 24px !important;
+}
+[data-testid="stChatInputTextArea"] {
+    color: #e2e8f0 !important;
+    font-family: 'Outfit', sans-serif !important;
+    background: transparent !important;
+}
+
+/* ── Quick prompt buttons ── */
+.stButton > button {
+    background: rgba(0, 212, 255, 0.06) !important;
+    border: 1px solid rgba(0, 212, 255, 0.2) !important;
+    color: #94d8e8 !important;
+    border-radius: 24px !important;
+    font-size: 13px !important;
+    font-family: 'Outfit', sans-serif !important;
+    padding: 8px 16px !important;
+    transition: all 0.2s ease !important;
+}
+.stButton > button:hover {
+    background: rgba(0, 212, 255, 0.15) !important;
+    border-color: rgba(0, 212, 255, 0.5) !important;
+    color: #ffffff !important;
+}
+
+/* ── Status badge ── */
+.status-online {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
     font-size: 12px;
-    padding: 3px 10px;
-    border-radius: 12px;
-    margin-top: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-family: 'Outfit', sans-serif;
 }
 
-hr { border-color: rgba(255,255,255,0.1) !important; }
+/* ── Role badge ── */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 212, 255, 0.1);
+    color: #67e8f9;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    font-family: 'Outfit', sans-serif;
+    margin-bottom: 8px;
+}
+
+/* ── Hero section ── */
+.hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #00d4ff, #6366f1, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    margin-bottom: 12px;
+}
+
+.hero-sub {
+    color: #94a3b8;
+    font-size: 16px;
+    line-height: 1.7;
+    font-weight: 300;
+}
+
+/* ── Divider ── */
+hr {
+    border-color: rgba(0, 212, 255, 0.15) !important;
+    margin: 16px 0 !important;
+}
+
+/* ── Info box ── */
+.stAlert {
+    background: rgba(0, 212, 255, 0.08) !important;
+    border: 1px solid rgba(0, 212, 255, 0.2) !important;
+    border-radius: 12px !important;
+    color: #e2e8f0 !important;
+}
+
+/* ── Input label ── */
+.stTextInput label { color: #94a3b8 !important; }
+
+/* ── Success message ── */
+.stSuccess {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    border-radius: 10px !important;
+    color: #6ee7b7 !important;
+}
+
+/* ── Error message ── */
+.stError {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    border-radius: 10px !important;
+}
+
+/* ── Caption ── */
+.stCaption { color: #475569 !important; font-size: 11px !important; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+::-webkit-scrollbar-thumb { background: rgba(0, 212, 255, 0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.4); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -77,6 +227,7 @@ HOSTED_KEY = get_hosted_key()
 ROLES = {
     "🎓 Student": {
         "key": "student",
+        "color": "#00d4ff",
         "quick": [
             "How do I register for courses?",
             "When is the next exam period?",
@@ -86,6 +237,7 @@ ROLES = {
     },
     "🏛️ Staff": {
         "key": "staff",
+        "color": "#6366f1",
         "quick": [
             "How do I submit a leave request?",
             "Where are the HR policies?",
@@ -95,6 +247,7 @@ ROLES = {
     },
     "📚 Faculty": {
         "key": "faculty",
+        "color": "#10b981",
         "quick": [
             "How do I submit final grades?",
             "What's the research grant deadline?",
@@ -144,8 +297,7 @@ def get_client():
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 🎓 CampusAI")
-    st.markdown("*Your campus assistant*")
-    st.markdown('<span class="status-badge">● Online</span>', unsafe_allow_html=True)
+    st.markdown('<span class="status-online">● Live</span>', unsafe_allow_html=True)
     st.divider()
 
     if not HOSTED_KEY:
@@ -162,52 +314,62 @@ with st.sidebar:
         st.caption("🔗 [Get free key →](https://console.groq.com)")
         st.divider()
 
-    st.markdown("### Select Role")
+    st.markdown("### Select Your Role")
     for label, info in ROLES.items():
         if st.button(label, key=f"role_{info['key']}", use_container_width=True):
             st.session_state.role = label
             st.session_state.messages = [
                 {
                     "role": "assistant",
-                    "content": "Welcome! 👋 I'm **CampusAI**, your campus assistant. What can I help you with today?",
+                    "content": f"Welcome! 👋 I'm **CampusAI**, your intelligent campus assistant. I'm here to help with anything — academics, services, admin, and more. What can I do for you today?",
                 }
             ]
             st.rerun()
 
     if st.session_state.role:
         st.divider()
-        st.markdown(f"**Active:** {st.session_state.role}")
+        role_info = ROLES[st.session_state.role]
+        st.markdown(f'<span class="role-badge">{st.session_state.role}</span>', unsafe_allow_html=True)
         if st.button("🔄 Switch Role", use_container_width=True):
             st.session_state.role = None
             st.session_state.messages = []
             st.rerun()
 
     st.divider()
-    st.caption("AI-generated responses — verify important details with the relevant office.")
+    st.caption("Powered by Groq · Responses are AI-generated")
+    st.caption("Verify important info with your campus office.")
 
 
 # ── Main area ─────────────────────────────────────────────────────────────────
 if not st.session_state.role:
-    st.markdown("<br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 3, 1])
     with col2:
-        st.markdown("# CampusAI")
-        st.markdown("#### Your intelligent university assistant")
-        st.markdown("""
-Get instant answers about campus life, academics, administration, and more.
+        st.markdown('<div class="hero-title">CampusAI</div>', unsafe_allow_html=True)
+        st.markdown('<p class="hero-sub">Your intelligent university assistant — get instant answers about academics, campus services, administration, and more.</p>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.info("👈 Select your role in the sidebar to get started")
 
-**To get started:**
-1. Select your role in the sidebar 👈
-2. Start chatting!
-        """)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("**Available for:**")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("🎓 **Students**\nCourses, grades, transcripts")
+        with c2:
+            st.markdown("🏛️ **Staff**\nHR, facilities, admin")
+        with c3:
+            st.markdown("📚 **Faculty**\nGrading, LMS, research")
+
 else:
     role_info = ROLES[st.session_state.role]
+
     st.markdown(f"## {st.session_state.role} Portal")
-    st.markdown('<span class="status-badge">● Live</span>', unsafe_allow_html=True)
+    st.markdown('<span class="status-online">● Online</span>', unsafe_allow_html=True)
 
     # Quick prompts
     if len(st.session_state.messages) <= 1:
-        st.markdown("**Quick questions:**")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("**Quick questions to get you started:**")
         cols = st.columns(2)
         for i, prompt in enumerate(role_info["quick"]):
             with cols[i % 2]:
@@ -236,7 +398,6 @@ else:
                 placeholder = st.empty()
                 full_response = ""
 
-                # Build messages for Groq
                 groq_messages = [
                     {
                         "role": "system",
@@ -247,7 +408,6 @@ else:
                     for m in st.session_state.messages
                 ]
 
-                # Stream response
                 stream = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=groq_messages,
